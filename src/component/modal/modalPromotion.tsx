@@ -1,5 +1,5 @@
 // import dependency
-import { type JSX, type ReactElement, type SetStateAction } from "react";
+import { type JSX, type SetStateAction } from "react";
 import ReactDom from "react-dom";
 
 // import type
@@ -12,11 +12,10 @@ import { FaChessRook } from "react-icons/fa6";
 import { FaChessKnight } from "react-icons/fa6";
 import { FaChessBishop } from "react-icons/fa6";
 import { FaChessQueen } from "react-icons/fa6";
-import { FaChessKing } from "react-icons/fa6";
 
 // import rule
 
-import { promotion } from "../../rules/pawn";
+import { promotionPawn } from "../../rules/pawn";
 
 interface ModlaPromotionType {
   square: SquareType[];
@@ -39,7 +38,7 @@ export default function ModalPromotion({
   }
 
   const clickHandlerPromotion = (name: string, nut: React.ReactNode) => {
-    promotion({
+    promotionPawn({
       position: isPownPromotion.promotion[0].position,
       nut,
       player: isPownPromotion.promotion[0].player,

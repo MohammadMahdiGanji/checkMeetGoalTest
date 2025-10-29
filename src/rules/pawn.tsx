@@ -7,77 +7,50 @@ import { type SquareType } from "../type/type";
 // import data
 import { col, row } from "../data";
 
+// import roule
+
+import { activeNut, squareEmpty, squarePlayer } from "./shared";
+
 // types
 
-interface AvailableMoveType {
-  name: string;
+interface AvailableMovePropType {
   position: string;
   square: SquareType[];
   player: "white" | "black" | "";
   hasMoved: boolean;
 }
 
-interface FindFrontType {
+interface FindFrontPropType {
   position: string;
-  square: SquareType[];
   player: "white" | "black" | "";
   hasMoved: boolean;
 }
 
-interface FindLeftType {
+interface FindLeftPropType {
   position: string;
   player: "white" | "black" | "";
 }
 
-interface FindRightType {
+interface FindRightPropType {
   position: string;
   player: "white" | "black" | "";
 }
 
-interface squareEmptyType {
-  position: string;
+interface IsPromotionPropType {
   square: SquareType[];
 }
 
-interface SquarePlayerType {
-  player: "white" | "black" | "" | undefined;
-  color: "white" | "black" | "";
-}
-
-interface SeTPpointer {
-  name: string;
-  position: string;
-  square: SquareType[];
-  player: "white" | "black" | "";
-  hasMoved: boolean;
-  setSquare: React.Dispatch<React.SetStateAction<SquareType[]>>;
-}
-
-interface IsPromotionType {
-  square: SquareType[];
-  player: "black" | "white" | "";
-  name: string;
-}
-
-interface MovePawnType {
+interface MovePawnPropType {
   square: SquareType[];
   position: string;
   setSquare: React.Dispatch<React.SetStateAction<SquareType[]>>;
-  nut: React.ReactNode;
   pointer: boolean;
   name: string;
-  allCapture: SquareType[];
   setAllCapture: React.Dispatch<React.SetStateAction<SquareType[]>>;
   player: string;
 }
 
-interface ActiveNutType {
-  position: string;
-  square: SquareType[];
-  setSquare: React.Dispatch<React.SetStateAction<SquareType[]>>;
-}
-
-interface PromotionType {
+interface PromotionPropType {
   position: string;
   player: "black" | "white" | "";
   nut: React.ReactNode;
@@ -86,8 +59,8 @@ interface PromotionType {
   setSquare: React.Dispatch<SetStateAction<SquareType[]>>;
 }
 
-// find front
-const findFront = ({ position, square, player, hasMoved }: FindFrontType) => {
+// this function is for find front square move
+const findFrontPawn = ({ position, player, hasMoved }: FindFrontPropType): string[] => {
   const postionNumber = Number(position.slice(1));
   const indexPostionNumber =
     col.findIndex((item) => item === postionNumber) + 1;
@@ -128,7 +101,8 @@ const findFront = ({ position, square, player, hasMoved }: FindFrontType) => {
   return postionFront;
 };
 
-const findLeft = ({ position, player }: FindLeftType) => {
+// this function is for find left square move
+const findLeftPawn = ({ position, player }: FindLeftPropType): string[] => {
   const positionNumber = Number(position.slice(1));
   const findIndexCol = col.findIndex((item) => item == positionNumber) + 1;
   const findPostionNumberLeft = col.slice(findIndexCol - 2, findIndexCol - 1);
@@ -153,7 +127,8 @@ const findLeft = ({ position, player }: FindLeftType) => {
   return findLeft;
 };
 
-const findRight = ({ position, player }: FindRightType) => {
+// this function is for find right square move
+const findRightPawn = ({ position, player }: FindRightPropType): string[] => {
   const positionNumber = Number(position.slice(1));
   const findIndexPositionNumber =
     col.findIndex((item) => item === positionNumber) + 1;
@@ -188,34 +163,17 @@ const findRight = ({ position, player }: FindRightType) => {
 
   return findRight;
 };
-const squareEmpty = ({ position, square }: squareEmptyType) => {
-  const findSquare = square.find((item) => item.position == position);
 
-  if (findSquare?.name === "") {
-    return false;
-  } else {
-    return true;
-  }
-};
-
-const squarePlayer = ({ player, color }: SquarePlayerType) => {
-  if (player === color) {
-    return true;
-  } else {
-    return false;
-  }
-};
-
-export const findAvailableMovis = ({
-  name,
+// this function is for find squre move
+export const findAvailableMovisPawn = ({
   position,
   square,
   player,
   hasMoved,
-}: AvailableMoveType) => {
-  let findPointerMove: unknown[] = [];
+}: AvailableMovePropType):string[] => {
+  let findPointerMove: string[] = [];
 
-  let findSquareLeftPosition = findLeft({ position, player });
+  let findSquareLeftPosition = findLeftPawn({ position, player });
   let findeSquareLeft = square.find(
     (item) => item.position == findSquareLeftPosition[0]
   );
@@ -240,23 +198,20 @@ export const findAvailableMovis = ({
     }
 
     if (squarePlayer({ player: findeSquareLeft?.player, color: "white" })) {
-      console.log(44);
       findPointerMove = [...findPointerMove];
     }
   }
 
   let findSquareFront;
   if (player === "black") {
-    findSquareFront = findFront({
+    findSquareFront = findFrontPawn({
       position,
-      square,
       player,
       hasMoved,
     }).reverse();
   } else {
-    findSquareFront = findFront({
+    findSquareFront = findFrontPawn({
       position,
-      square,
       player,
       hasMoved,
     });
@@ -278,7 +233,7 @@ export const findAvailableMovis = ({
     findPointerMove = [...findPointerMove, ...findSquareFront];
   }
 
-  let findSquareRightPosition = findRight({ position, player });
+  let findSquareRightPosition = findRightPawn({ position, player });
 
   let findSquareRight = square.find(
     (item) => item.position === findSquareRightPosition[0]
@@ -308,79 +263,21 @@ export const findAvailableMovis = ({
   return findPointerMove;
 };
 
-export const setPpointer = ({
-  name,
-  position,
-  square,
-  player,
-  hasMoved,
-  setSquare,
-}: SeTPpointer) => {
-  if (name === "pawn") {
-    const pointer = findAvailableMovis({
-      name,
-      position,
-      square,
-      player,
-      hasMoved,
-    });
-    resetPointer(square, setSquare);
-    let newSquare: SquareType[] = [];
-    square.map((item) => {
-      pointer.map((i) => {
-        if (i === item.position) {
-          item.pointer = true;
-        }
-      });
-      newSquare.push(item);
-    });
-    setSquare(newSquare);
-  }
-};
-
-export const resetPointer = (
-  square: SquareType[],
-  setSquare: React.Dispatch<React.SetStateAction<SquareType[]>>
-) => {
-  const newSquare: SquareType[] = [];
-
-  square.map((item) => {
-    item.pointer = false;
-    newSquare.push(item);
-  });
-
-  setSquare(newSquare);
-};
-
-export const activeNut = ({ position, setSquare, square }: ActiveNutType) => {
-  const newSquare: SquareType[] = [];
-
-  square.map((item) => {
-    if (item.name != "") {
-      if (position == item.position) {
-        item.active = true;
-      }
-    }
-    newSquare.push(item);
-  });
-  setSquare(newSquare);
-};
-
+// this function is for move nut 
 export const movePawn = ({
   position,
   setSquare,
   square,
-  nut,
   pointer,
   player,
   name,
-  allCapture,
   setAllCapture,
-}: MovePawnType) => {
+}: MovePawnPropType): void => {
   const active = square.find((item) => item.active === true);
 
   const activePostion = active?.position;
-  let playerColor = active?.player;
+  const playerColor = active?.player;
+  const activeName = active?.name;
 
   let updateActive: SquareType[] = [];
 
@@ -395,45 +292,50 @@ export const movePawn = ({
   }
 
   const newSquare: SquareType[] = [];
-  if (active?.position) {
-    if (pointer) {
-      square.map((item) => {
-        if (item.position === position) {
-          if (player !== "" && pointer === true) {
-            const capture = JSON.parse(JSON.stringify(item));
-            setAllCapture((pre) => [...pre, capture]);
+  if (activeName === "pawn") {
+    if (active?.position) {
+      if (pointer) {
+        square.map((item) => {
+          if (item.position === position) {
+            if (player !== "" && pointer === true) {
+              const capture = JSON.parse(JSON.stringify(item));
+              setAllCapture((pre) => [...pre, capture]);
+            }
+            if (playerColor === "black") {
+              item.name = active.name;
+              item.nut = active.nut;
+              item.hasMoved = true;
+              item.player = playerColor;
+            } else if (playerColor === "white") {
+              item.name = active.name;
+              item.nut = active.nut;
+              item.hasMoved = true;
+              item.player = playerColor;
+            }
           }
-          if (playerColor === "black") {
-            item.name = active.name;
-            item.nut = active.nut;
+          item.active = false;
+          newSquare.push(item);
+        });
+
+        square.map((item) => {
+          if (item.position === activePostion) {
+            item.name = "";
+            item.nut = "";
             item.hasMoved = true;
-            item.player = playerColor;
-          } else if (playerColor === "white") {
-            item.name = active.name;
-            item.nut = active.nut;
-            item.hasMoved = true;
-            item.player = playerColor;
+            item.player = "";
           }
-        }
-        item.active = false;
-        newSquare.push(item);
-      });
+        });
 
-      square.map((item) => {
-        if (item.position === activePostion) {
-          item.name = "";
-          item.nut = "";
-          item.hasMoved = true;
-          item.player = "";
-        }
-      });
-
-      setSquare(newSquare);
+        setSquare(newSquare);
+      }
     }
   }
 };
 
-export const isPromotion = ({ square, player, name }: IsPromotionType) => {
+// this function is for prob nut in is last square or is not last square
+export const isPromotionPawn = ({
+  square,
+}: IsPromotionPropType): { result: boolean; promotion: SquareType[] } => {
   let promotion: SquareType[] = [];
 
   let result = square.some((item) => {
@@ -462,14 +364,15 @@ export const isPromotion = ({ square, player, name }: IsPromotionType) => {
   return { result, promotion };
 };
 
-export const promotion = ({
+// this function is for promotion
+export const promotionPawn = ({
   position,
   nut,
   player,
   name,
   square,
   setSquare,
-}: PromotionType) => {
+}: PromotionPropType): void => {
   const newSquare: SquareType[] = [];
 
   square.map((item) => {

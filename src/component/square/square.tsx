@@ -11,15 +11,8 @@ import {
 import { type SquareType } from "../../type/type";
 
 // import rules
-import {
-  setPpointer,
-  resetPointer,
-  activeNut,
-  movePawn,
-  isPromotion,
-  promotion,
-} from "../../rules/pawn";
-
+import { movePawn, isPromotionPawn, findAvailableMovisPawn } from "../../rules/pawn";
+import { activeNut,setPpointer, resetPointer } from "../../rules/shared";
 // import context
 import { ChessContext } from "../../context/chess";
 
@@ -37,22 +30,38 @@ export default function Square({
   hasMoved,
   availableMovis,
 }: SquareType): JSX.Element {
-  const { square, setSquare, allCapture, setAllCapture } =
+
+  const { square, setSquare, setAllCapture } =
     useContext(ChessContext);
 
   const [infoPawnPromotion, setInfoPawnPromotion] = useState<{
     result: boolean;
     promotion: SquareType[];
   }>();
-
+  
   const positionString: string = String(position.slice(0, 1));
-
+  
   const clickHandlerSquare = () => {
-    resetPointer(square, setSquare);
+   {/*
+    *********************************
+    -----------start pawn------------
+    *********************************
+  */}
+    resetPointer({ square, setSquare });
+
+    const findPointermove: string[] = findAvailableMovisPawn({
+      position,
+      square,
+      player,
+      hasMoved,
+    });
 
     if (!pointer == true && name != "") {
-      setPpointer({ name, position, square, player, hasMoved, setSquare });
-
+      setPpointer({
+        square,
+        setSquare,
+        pointer: findPointermove,
+      });
       activeNut({ position, setSquare, square });
     }
 
@@ -60,17 +69,22 @@ export default function Square({
       position,
       setSquare,
       square,
-      nut,
       pointer,
-      allCapture,
       setAllCapture,
       name,
       player,
     });
-    const isPownPromotion = isPromotion({ square, player, name });
+
+    const isPownPromotion = isPromotionPawn({ square });
     if (isPownPromotion) {
       setInfoPawnPromotion(isPownPromotion);
     }
+       {/*
+    *********************************
+    ------------end pawn-------------
+    *********************************
+  */}
+
   };
 
   return (
@@ -104,7 +118,11 @@ export default function Square({
         )}
         {nut}
       </span>
-      <ModalPromotion isPownPromotion={infoPawnPromotion} square={square} setSquare={setSquare} />
+      <ModalPromotion
+        isPownPromotion={infoPawnPromotion}
+        square={square}
+        setSquare={setSquare}
+      />
     </span>
   );
 }

@@ -1,11 +1,8 @@
 // imort dependency
-import { type JSX, useContext } from "react";
+import { type JSX} from "react";
 
 // import types
 import { type SquareType } from "../../type/type";
-
-// import context
-import { ChessContext } from "../../context/chess";
 
 // import icons
 
@@ -17,15 +14,9 @@ import { FaChessKing } from "react-icons/fa6";
 import { FaChessPawn } from "react-icons/fa6";
 
 export default function Capture({
-  id,
   position,
-  pointer,
   name,
-  nut,
   player,
-  captured,
-  hasMoved,
-  availableMovis,
 }: SquareType): JSX.Element {
   let Icon: any;
 
