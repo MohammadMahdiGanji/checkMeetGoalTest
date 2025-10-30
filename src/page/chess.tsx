@@ -23,7 +23,7 @@ export default function Chess(): JSX.Element {
           }
         })}
       </div>
-      <div className="p-4 rounded-xl bg-[#68c0ff70] shadow-[0px_0px_10px_rgb(255,255,255,0.8)]">
+      <div className="p-4 rounded-xl bg-[#68c0ff70] shadow-[0px_0px_10px_rgb(255,255,255,1)]">
         <div className="p-4 rounded-xl bg-[#559bcd70] shadow-[0px_0px_10px_rgb(255,255,255,0.8)]">
           <div className="p-4 rounded-xl bg-[#31587570] shadow-[0px_0px_10px_rgb(255,255,255,0.8)]">
             <div className="bg-[#2a5c8070] p-4 rounded-xl shadow-[0px_0px_10px_rgb(255,255,255,0.8)]">

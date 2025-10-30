@@ -1,18 +1,20 @@
 // import dependency
-import {
-  useContext,
-  useEffect,
-  useState,
-  type JSX,
-  type ReactElement,
-} from "react";
+import { useContext, useState, type JSX } from "react";
 
 // import type
 import { type SquareType } from "../../type/type";
 
 // import rules
-import { movePawn, isPromotionPawn, findAvailableMovisPawn } from "../../rules/pawn";
-import { activeNut,setPpointer, resetPointer } from "../../rules/shared";
+import { isPromotionPawn } from "../../rules/pawn";
+import {
+  activeNut,
+  setPpointer,
+  resetPointer,
+  avaliableMove,
+  moveNut,
+} from "../../rules/shared";
+
+
 // import context
 import { ChessContext } from "../../context/chess";
 
@@ -30,42 +32,46 @@ export default function Square({
   hasMoved,
   availableMovis,
 }: SquareType): JSX.Element {
-
-  const { square, setSquare, setAllCapture } =
-    useContext(ChessContext);
+  const { square, setSquare, setAllCapture } = useContext(ChessContext);
 
   const [infoPawnPromotion, setInfoPawnPromotion] = useState<{
     result: boolean;
     promotion: SquareType[];
   }>();
-  
+
   const positionString: string = String(position.slice(0, 1));
-  
+
   const clickHandlerSquare = () => {
-   {/*
+    {
+      /*
     *********************************
     -----------start pawn------------
     *********************************
-  */}
+  */
+    }
     resetPointer({ square, setSquare });
 
-    const findPointermove: string[] = findAvailableMovisPawn({
-      position,
-      square,
-      player,
-      hasMoved,
-    });
+    // this section of the nut is all
 
     if (!pointer == true && name != "") {
-      setPpointer({
-        square,
-        setSquare,
-        pointer: findPointermove,
-      });
       activeNut({ position, setSquare, square });
+      setTimeout(() => {
+        const pointerMovedAllNut = avaliableMove({
+          position,
+          square,
+          player,
+          hasMoved,
+          name,
+        });
+        setPpointer({
+          square,
+          setSquare,
+          pointer: pointerMovedAllNut,
+        });
+      }, 0);
     }
 
-    movePawn({
+    moveNut({
       position,
       setSquare,
       square,
@@ -75,16 +81,18 @@ export default function Square({
       player,
     });
 
+
     const isPownPromotion = isPromotionPawn({ square });
     if (isPownPromotion) {
       setInfoPawnPromotion(isPownPromotion);
     }
-       {/*
+    {
+      /*
     *********************************
     ------------end pawn-------------
     *********************************
-  */}
-
+  */
+    }
   };
 
   return (

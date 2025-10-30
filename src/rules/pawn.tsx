@@ -40,15 +40,6 @@ interface IsPromotionPropType {
   square: SquareType[];
 }
 
-interface MovePawnPropType {
-  square: SquareType[];
-  position: string;
-  setSquare: React.Dispatch<React.SetStateAction<SquareType[]>>;
-  pointer: boolean;
-  name: string;
-  setAllCapture: React.Dispatch<React.SetStateAction<SquareType[]>>;
-  player: string;
-}
 
 interface PromotionPropType {
   position: string;
@@ -261,75 +252,6 @@ export const findAvailableMovisPawn = ({
   }
 
   return findPointerMove;
-};
-
-// this function is for move nut 
-export const movePawn = ({
-  position,
-  setSquare,
-  square,
-  pointer,
-  player,
-  name,
-  setAllCapture,
-}: MovePawnPropType): void => {
-  const active = square.find((item) => item.active === true);
-
-  const activePostion = active?.position;
-  const playerColor = active?.player;
-  const activeName = active?.name;
-
-  let updateActive: SquareType[] = [];
-
-  square.map((item) => {
-    item.active = false;
-    updateActive.push(item);
-  });
-
-  setSquare(updateActive);
-  if (!pointer == true && name != "") {
-    activeNut({ position, setSquare, square });
-  }
-
-  const newSquare: SquareType[] = [];
-  if (activeName === "pawn") {
-    if (active?.position) {
-      if (pointer) {
-        square.map((item) => {
-          if (item.position === position) {
-            if (player !== "" && pointer === true) {
-              const capture = JSON.parse(JSON.stringify(item));
-              setAllCapture((pre) => [...pre, capture]);
-            }
-            if (playerColor === "black") {
-              item.name = active.name;
-              item.nut = active.nut;
-              item.hasMoved = true;
-              item.player = playerColor;
-            } else if (playerColor === "white") {
-              item.name = active.name;
-              item.nut = active.nut;
-              item.hasMoved = true;
-              item.player = playerColor;
-            }
-          }
-          item.active = false;
-          newSquare.push(item);
-        });
-
-        square.map((item) => {
-          if (item.position === activePostion) {
-            item.name = "";
-            item.nut = "";
-            item.hasMoved = true;
-            item.player = "";
-          }
-        });
-
-        setSquare(newSquare);
-      }
-    }
-  }
 };
 
 // this function is for prob nut in is last square or is not last square
