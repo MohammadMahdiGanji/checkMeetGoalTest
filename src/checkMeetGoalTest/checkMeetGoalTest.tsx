@@ -1,54 +1,113 @@
 // import type
 import { type SquareType } from "../type/type";
 
-// import rule
-import { kingAvailableCheck } from "../rules/king";
+// impor rule
+import { checkKing } from "../rules/king";
 import { findNutMoveRoadsKingCheckAll } from "../rules/check";
+import { kingAvailable } from "../rules/king";
 
 interface CheckMeetGoalTestProp {
   square: SquareType[];
-  isTurn: boolean;
-  isCheckKing: boolean;
 }
 
-export function checkMeetGoalTest({
-  square,
-  isTurn,
-  isCheckKing,
-}: CheckMeetGoalTestProp) {
-  let goal: boolean;
+export function checkMeetGoalTest({ square }: CheckMeetGoalTestProp) {
+  let kings = square.filter((square) => square.name == "king");
 
-  if (!isCheckKing) {
-    goal = false;
-  } else {
-    const defientMoves: string[] = [];
+  let result: {
+    checkMeetWhite: boolean;
+    checkMeetBlack: boolean;
+  } = {
+    checkMeetWhite: false,
+    checkMeetBlack: false,
+  };
 
-    square.forEach((s) => {
-      defientMoves.push(
-        ...findNutMoveRoadsKingCheckAll({
-          square,
-          position: s.position,
-          name: s.name,
-          hasMoved: s.hasMoved,
-          player: s.player,
-          isTurn: isTurn,
-        })
-      );
-    });
+  kings.forEach((king) => {
+    if (king.player == "white") {
+      let checkWhite = checkKing({ king });
+      let defiendMoveWhite: string[] = [];
 
-    let moveKing: string[];
-    if (isTurn) {
-      moveKing = kingAvailableCheck({ square, player: "white" });
+      square.forEach((s) => {
+        if (s.player == "white") {
+          if (s.name == "pawn") {
+            defiendMoveWhite.push(
+              ...findNutMoveRoadsKingCheckAll({
+                square,
+                king,
+                position: s.position,
+                player: s.player,
+                name: s.name,
+                hasMoved: s.hasMoved,
+              })
+            );
+          } else {
+            defiendMoveWhite.push(
+              ...findNutMoveRoadsKingCheckAll({
+                square,
+                king,
+                position: s.position,
+                player: s.player,
+                name: s.name,
+                hasMoved: true,
+              })
+            );
+          }
+        }
+      });
+
+      let moveKingWhite = kingAvailable({ square, position: king.position });
+      if (
+        checkWhite == true &&
+        defiendMoveWhite.length == 0 &&
+        moveKingWhite.length == 0
+      ) {
+        result.checkMeetWhite = true;
+      } else {
+        result.checkMeetWhite = false;
+      }
     } else {
-      moveKing = kingAvailableCheck({ square, player: "black" });
-    }
+      let checkBlack = checkKing({ king });
+      let defiendMoveBlack: string[] = [];
 
-    if (isCheckKing && defientMoves.length == 0 && moveKing.length == 0) {
-      goal = true;
-    } else {
-      goal = false;
-    }
-  }
+      square.forEach((s) => {
+        if (s.player == "black") {
+          if (s.name == "pawn") {
+            defiendMoveBlack.push(
+              ...findNutMoveRoadsKingCheckAll({
+                square,
+                king,
+                position: s.position,
+                player: s.player,
+                name: s.name,
+                hasMoved: s.hasMoved,
+              })
+            );
+          } else {
+            defiendMoveBlack.push(
+              ...findNutMoveRoadsKingCheckAll({
+                square,
+                king,
+                position: s.position,
+                player: s.player,
+                name: s.name,
+                hasMoved: true,
+              })
+            );
+          }
+        }
+      });
 
-  return goal;
+      let moveKingBlack = kingAvailable({ square, position: king.position });
+      if (
+        checkBlack == true &&
+        defiendMoveBlack.length == 0 &&
+        moveKingBlack.length == 0
+      ) {
+        result.checkMeetBlack = true;
+      } else {
+        result.checkMeetBlack = false;
+      }
+    }
+  });
+
+  return result;
 }

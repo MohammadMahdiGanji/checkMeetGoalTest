@@ -3,42 +3,35 @@ import { type SquareType } from "../type/type";
 
 // import data
 import { row } from "../data";
-import { availableCheck } from "./check";
-import { avialiableBishopMove } from "./bishop";
-import { availableCheckPawn, findAvailableMovisPawn } from "./pawn";
-import { availiabelMovisKnight } from "./knight";
-import { availableMoveRook } from "./rook";
 import { avialableMoveQueen } from "./queen";
 
-//  suchv as  file types
-
-interface KingAvailableCheckProp {
-  square: SquareType[];
-  player: "black" | "white" | "";
-}
+// import rule
+import { availableCheckPawn } from "./pawn";
+import { availiabelMovisKnight } from "./knight";
+import { availableMoveRook } from "./rook";
+import { avialiableBishopMove } from "./bishop";
 
 interface KingAvailableProp {
   square: SquareType[];
+  position: String;
 }
 
-interface CheckMove {
-  square: SquareType[];
-  isTurn: boolean;
+interface CheckKing {
+  king: SquareType;
 }
 
 interface RoadsNutKingCheckProp {
   square: SquareType[];
-  isTurn: boolean;
+  king: SquareType;
 }
 
-interface FindNutMoveRoadsKingCheck {
+interface CheckMove {
   square: SquareType[];
-  isTurn: boolean;
-  position: string;
-  name: string;
+  king: SquareType;
 }
-export const kingAvailable = ({ square }: KingAvailableProp) => {
-  const active = square.find((square) => square.active == true);
+
+export const kingAvailable = ({ square, position }: KingAvailableProp) => {
+  const active = square.find((square) => square.position == position);
 
   const positionNumber = Number(active?.position.slice(1));
   const positionChar = String(active?.position.slice(0, 1));
@@ -88,13 +81,80 @@ export const kingAvailable = ({ square }: KingAvailableProp) => {
   return positionKing;
 };
 
-export const checkMove = ({ square, isTurn }: CheckMove) => {
+export const kingAvailableCheck = ({ square, position }: KingAvailableProp) => {
+  const active = square.find((square) => square.position == position);
+
+  const positionNumber = Number(active?.position.slice(1));
+  const positionChar = String(active?.position.slice(0, 1));
+
+  const indexPorsionChar = row.findIndex((row) => row == positionChar);
+
+  const postionCharKing: string[] = [];
+
+  postionCharKing.push(...row.slice(indexPorsionChar - 1, indexPorsionChar));
+  postionCharKing.push(...row.slice(indexPorsionChar, indexPorsionChar + 2));
+
+  let findPpostionKing: string[] = [];
+
+  postionCharKing.forEach((char) => {
+    if (char == positionChar) {
+      findPpostionKing.push(`${char}${positionNumber + 1}`);
+      findPpostionKing.push(`${char}${positionNumber - 1}`);
+    } else {
+      findPpostionKing.push(`${char}${positionNumber + 1}`);
+      findPpostionKing.push(`${char}${positionNumber}`);
+      findPpostionKing.push(`${char}${positionNumber - 1}`);
+    }
+  });
+
+  let positionKing: string[] = [];
+
+  findPpostionKing.map((position) => {
+    square.map((square) => {
+      if (square.position == position) {
+        if (active?.player == "white") {
+          if (square.isCheckBlack == false) {
+            positionKing.push(position);
+          }
+        } else if (active?.player == "black") {
+          if (square.isCHeckWhite == false) {
+            positionKing.push(position);
+          }
+        }
+      }
+    });
+  });
+
+  return positionKing;
+};
+
+export const checkKing = ({ king }: CheckKing) => {
+  let result: boolean = false;
+
+  if (king.player == "white") {
+    if (king.isCheckBlack == true) {
+      result = true;
+    } else {
+      result = false;
+    }
+  } else {
+    if (king.isCHeckWhite == true) {
+      result = true;
+    } else {
+      result = false;
+    }
+  }
+
+  return result;
+};
+
+export const checkMove = ({ square, king }: CheckMove) => {
   const nutCheckKing: SquareType[] = [];
-  if (!isTurn) {
+
+  if (king.player === "black") {
     const activeKing = square.find(
       (square) => square.name == "king" && square.player == "black"
     );
-    const positionMoveNut = availableCheck({ square, isTurn });
 
     let pwan: SquareType[] = square.filter(
       (square) => square.name === "pawn" && square.player == "white"
@@ -202,7 +262,6 @@ export const checkMove = ({ square, isTurn }: CheckMove) => {
     const activeKing = square.find(
       (square) => square.name == "king" && square.player == "white"
     );
-    const positionMoveNut = availableCheck({ square, isTurn });
 
     let pwan: SquareType[] = square.filter(
       (square) => square.name === "pawn" && square.player == "black"
@@ -311,32 +370,12 @@ export const checkMove = ({ square, isTurn }: CheckMove) => {
   return nutCheckKing;
 };
 
-export const roadsNutKingCheck = ({
-  square,
-  isTurn,
-}: RoadsNutKingCheckProp) => {
-  const nut = checkMove({ square, isTurn });
+export const roadsNutKingCheck = ({ square, king }: RoadsNutKingCheckProp) => {
+  const nut = checkMove({ square, king });
 
   const allRoadsNut: string[] = [];
 
   let roadsMoveKing: string[] = [];
-
-  let king: SquareType | undefined;
-  if (isTurn) {
-    king = square.find(
-      (square) =>
-        square.name == "king" &&
-        square.player == "white" &&
-        square.isCheckBlack == true
-    );
-  } else {
-    king = square.find(
-      (square) =>
-        square.name == "king" &&
-        square.player == "black" &&
-        square.isCHeckWhite == true
-    );
-  }
 
   const positionNumberKing = Number(king?.position.slice(1));
   nut.forEach((nut) => {
@@ -534,313 +573,4 @@ export const roadsNutKingCheck = ({
   const uniqueRoadsMoveKingArray = [...uniqueRoadsMoveKingSet];
 
   return uniqueRoadsMoveKingArray;
-};
-
-export const findNutMoveRoadsKingCheck = ({
-  square,
-  isTurn,
-  position,
-  name,
-}: FindNutMoveRoadsKingCheck) => {
-  const rodsKingCheck = roadsNutKingCheck({ square, isTurn });
-  let pointerNutRoadsChech: string[] = [];
-  if (isTurn) {
-    const allMoveNut = square.filter((square) => square.player == "white");
-
-    // start pawn
-    if (name == "pawn") {
-      const pawn = allMoveNut.filter(
-        (square) => square.name == "pawn" && square.position === position
-      );
-
-      const findMovePawn = findAvailableMovisPawn({
-        square,
-        hasMoved: pawn[0]?.hasMoved,
-        player: pawn[0]?.player,
-        position: pawn[0]?.position,
-      });
-      rodsKingCheck.forEach((road) => {
-        findMovePawn.forEach((position) => {
-          if (position == road) {
-            pointerNutRoadsChech.push(road);
-          }
-        });
-      });
-    }
-
-    // end pawn
-
-    // start knight
-    if (name == "knight") {
-      const knight = allMoveNut.filter(
-        (square) => square.name == "knight" && square.position === position
-      );
-
-      const findMoveKnight = availiabelMovisKnight({
-        square,
-        position: knight[0].position,
-      });
-
-      rodsKingCheck.forEach((road) => {
-        findMoveKnight.forEach((position) => {
-          if (position == road) {
-            pointerNutRoadsChech.push(road);
-          }
-        });
-      });
-    }
-    // end knight
-
-    // start bishop
-    if (name == "bishop") {
-      const bishop = allMoveNut.filter(
-        (square) => square.name == "bishop" && square.position === position
-      );
-
-      const findMovebishop = avialiableBishopMove({
-        square,
-        position: bishop[0]?.position,
-      });
-
-      rodsKingCheck.forEach((road) => {
-        findMovebishop.forEach((position) => {
-          if (position == road) {
-            pointerNutRoadsChech.push(road);
-          }
-        });
-      });
-    }
-    // end bishop
-
-    // start rook
-    if (name == "rook") {
-      const rook = allMoveNut.filter(
-        (square) => square.name == "rook" && square.position === position
-      );
-
-      const findMoveRook = availableMoveRook({
-        square,
-        position: rook[0]?.position,
-      });
-
-      rodsKingCheck.forEach((road) => {
-        findMoveRook.forEach((position) => {
-          if (position == road) {
-            pointerNutRoadsChech.push(road);
-          }
-        });
-      });
-    }
-    // end rook
-
-    // start queen
-    if (name == "queen") {
-      const queen = allMoveNut.filter(
-        (square) => square.name == "queen" && square.position === position
-      );
-
-      const findMoveQueen = avialableMoveQueen({
-        square,
-        position: queen[0].position,
-      });
-
-      rodsKingCheck.forEach((road) => {
-        findMoveQueen.forEach((position) => {
-          if (position == road) {
-            pointerNutRoadsChech.push(road);
-          }
-        });
-      });
-    }
-    // end queen
-    // start king
-    if (name == "king") {
-      const roadKing = kingAvailable({ square });
-      pointerNutRoadsChech.push(...roadKing);
-    }
-    // end king
-  } else {
-    const allMoveNut = square.filter((square) => square.player == "black");
-
-    // start pawn
-    if (name == "pawn") {
-      const pawn = allMoveNut.filter(
-        (square) => square.name == "pawn" && square.position === position
-      );
-
-      const findMovePawn = findAvailableMovisPawn({
-        square,
-        hasMoved: pawn[0]?.hasMoved,
-        player: pawn[0]?.player,
-        position: pawn[0]?.position,
-      });
-      rodsKingCheck.forEach((road) => {
-        findMovePawn.forEach((position) => {
-          if (position == road) {
-            pointerNutRoadsChech.push(road);
-          }
-        });
-      });
-    }
-
-    // end pawn
-
-    // start knight
-    if (name == "knight") {
-      const knight = allMoveNut.filter(
-        (square) => square.name == "knight" && square.position === position
-      );
-
-      const findMoveKnight = availiabelMovisKnight({
-        square,
-        position: knight[0]?.position,
-      });
-
-      rodsKingCheck.forEach((road) => {
-        findMoveKnight.forEach((position) => {
-          if (position == road) {
-            pointerNutRoadsChech.push(road);
-          }
-        });
-      });
-    }
-    // end knight
-
-    // start bishop
-    if (name == "bishop") {
-      const bishop = allMoveNut.filter(
-        (square) => square.name == "bishop" && square.position == position
-      );
-
-      const findMovebishop = avialiableBishopMove({
-        square,
-        position: bishop[0].position,
-      });
-
-      rodsKingCheck.forEach((road) => {
-        findMovebishop.forEach((position) => {
-          if (position == road) {
-            pointerNutRoadsChech.push(road);
-          }
-        });
-      });
-    }
-    // end bishop
-
-    // start rook
-    if (name == "rook") {
-      const rook = allMoveNut.filter(
-        (square) => square.name == "rook" && square.position === position
-      );
-
-      const findMoveRook = availableMoveRook({
-        square,
-        position: rook[0]?.position,
-      });
-
-      rodsKingCheck.forEach((road) => {
-        findMoveRook.forEach((position) => {
-          if (position == road) {
-            pointerNutRoadsChech.push(road);
-          }
-        });
-      });
-    }
-    // end rook
-
-    // start queen
-    if (name == "queen") {
-      const queen = allMoveNut.filter(
-        (square) => square.name == "queen" && square.position === position
-      );
-
-      const findMoveQueen = avialableMoveQueen({
-        square,
-        position: queen[0].position,
-      });
-
-      rodsKingCheck.forEach((road) => {
-        findMoveQueen.forEach((position) => {
-          if (position == road) {
-            pointerNutRoadsChech.push(road);
-          }
-        });
-      });
-    }
-    // end queen
-
-    // start king
-    if (name == "king") {
-      const roadKing = kingAvailable({ square });
-      pointerNutRoadsChech.push(...roadKing);
-    }
-    // end king
-  }
-
-  return pointerNutRoadsChech;
-};
-
-export const kingAvailableCheck = ({
-  square,
-  player,
-}: KingAvailableCheckProp) => {
-  const active = square.find(
-    (square) => square.player == player && square.name == "king"
-  );
-
-  const positionNumber = Number(active?.position.slice(1));
-  const positionChar = String(active?.position.slice(0, 1));
-
-  const indexPorsionChar = row.findIndex((row) => row == positionChar);
-
-  const postionCharKing: string[] = [];
-
-  postionCharKing.push(...row.slice(indexPorsionChar - 1, indexPorsionChar));
-  postionCharKing.push(...row.slice(indexPorsionChar, indexPorsionChar + 2));
-
-  let findPpostionKing: string[] = [];
-
-  postionCharKing.forEach((char) => {
-    if (char == positionChar) {
-      findPpostionKing.push(`${char}${positionNumber + 1}`);
-      findPpostionKing.push(`${char}${positionNumber - 1}`);
-    } else {
-      findPpostionKing.push(`${char}${positionNumber + 1}`);
-      findPpostionKing.push(`${char}${positionNumber}`);
-      findPpostionKing.push(`${char}${positionNumber - 1}`);
-    }
-  });
-
-  let positionKing: string[] = [];
-
-  findPpostionKing.map((position) => {
-    square.map((square) => {
-      if (square.position == position) {
-        if (active?.player == "white") {
-          if (square.isCheckBlack == false) {
-            if (square.name == "" || square.player != active?.player) {
-              positionKing.push(position);
-            }
-          }
-        } else if (active?.player == "black") {
-          if (square.isCHeckWhite == false) {
-            if (square.name == "" || square.player != active?.player) {
-              positionKing.push(position);
-            }
-          }
-        }
-      }
-    });
-  });
-
-  return positionKing;
-};
-
-export const nutMoveFronKing = (
-  square: SquareType[],
-  isTurn: boolean,
-  player: "black" | "white" | ""
-) => {
- 
- 
 };

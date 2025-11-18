@@ -1,5 +1,13 @@
 // import dependency
-import { useContext, useEffect, useState, type JSX } from "react";
+import React, { useContext, useEffect, useState, type JSX } from "react";
+
+// imort icon
+import { FaChessRook } from "react-icons/fa6";
+import { FaChessKnight } from "react-icons/fa6";
+import { FaChessBishop } from "react-icons/fa6";
+import { FaChessQueen } from "react-icons/fa6";
+import { FaChessKing } from "react-icons/fa6";
+import { FaChessPawn } from "react-icons/fa6";
 
 // import type
 import { type SquareType } from "../../type/type";
@@ -13,8 +21,6 @@ import {
   avaliableMove,
   moveNut,
 } from "../../rules/shared";
-import { nutMoveFronKing } from "../../rules/king";
-import { findNutMoveRoadsKingCheck } from "../../rules/king";
 
 // import context
 import { ChessContext } from "../../context/chess";
@@ -31,11 +37,8 @@ interface SquarePropType {
   player: "white" | "black" | "";
   hasMoved: boolean;
   active: boolean;
-  isTurn: boolean;
-  setIsTurn: React.Dispatch<React.SetStateAction<boolean>>;
   isCheckBlack: boolean;
   isCHeckWhite: boolean;
-  isCheckKing: boolean;
 }
 
 export default function Square({
@@ -47,11 +50,8 @@ export default function Square({
   player,
   hasMoved,
   active,
-  isTurn,
   isCheckBlack,
   isCHeckWhite,
-  setIsTurn,
-  isCheckKing,
 }: SquarePropType): JSX.Element {
   const { square, setSquare, setAllCapture } = useContext(ChessContext);
 
@@ -62,88 +62,70 @@ export default function Square({
 
   const positionString: string = String(position.slice(0, 1));
 
-  useEffect(() => {}, [square]);
-
   const clickHandlerSquare = () => {
-    if (!isCheckKing) {
-      resetPointer({ square, setSquare });
+    resetPointer({ square, setSquare });
 
-      if (!pointer == true && name != "") {
-        activeNut({ position, setSquare, square });
-        setTimeout(() => {
-          const pointerMovedAllNut = avaliableMove({
-            position,
-            square,
-            player,
-            hasMoved,
-            name,
-          });
+    if (!pointer == true && name != "") {
+      activeNut({ position, setSquare, square });
+      setTimeout(() => {
+        const pointerMovedAllNut = avaliableMove({
+          position,
+          square,
+          player,
+          hasMoved,
+          name,
+        });
 
-          setPpointer({
-            square,
-            setSquare,
-            pointer: pointerMovedAllNut,
-            isTurn,
-            player,
-          });
-        }, 0);
-      }
-
-      moveNut({
-        position,
-        setSquare,
-        square,
-        pointer,
-        setAllCapture,
-        name,
-        player,
-        setIsTurn,
-      });
-      const isPownPromotion = isPromotionPawn({ square });
-      if (isPownPromotion) {
-        setInfoPawnPromotion(isPownPromotion);
-      }
-      nutMoveFronKing(square, isTurn, player);
-    } else {
-      resetPointer({ square, setSquare });
-
-      if (!pointer == true && name != "") {
-        activeNut({ position, setSquare, square });
-        setTimeout(() => {
-          const pointerMovedAllNut = findNutMoveRoadsKingCheck({
-            square,
-            isTurn,
-            position,
-            name,
-          });
-          setPpointer({
-            square,
-            setSquare,
-            pointer: pointerMovedAllNut,
-            isTurn,
-            player,
-          });
-        }, 0);
-      }
-      moveNut({
-        position,
-        setSquare,
-        square,
-        pointer,
-        setAllCapture,
-        name,
-        player,
-        setIsTurn,
-      });
-      const isPownPromotion = isPromotionPawn({ square });
-      if (isPownPromotion) {
-        setInfoPawnPromotion(isPownPromotion);
-      }
+        setPpointer({
+          square,
+          setSquare,
+          pointer: pointerMovedAllNut,
+          player,
+        });
+      }, 0);
     }
+
+    moveNut({
+      position,
+      setSquare,
+      square,
+      pointer,
+      setAllCapture,
+      name,
+      player,
+    });
+    const isPownPromotion = isPromotionPawn({ square });
+    if (isPownPromotion) {
+      setInfoPawnPromotion(isPownPromotion);
+    }
+  };
+
+  const dragOverHandler = (event: React.DragEvent<HTMLSpanElement>) => {
+    event.preventDefault();
+  };
+
+  const dropHandler = (
+    event: React.DragEvent<HTMLSpanElement>,
+    position: string
+  ) => {
+    let infoDrop = JSON.parse(event.dataTransfer.getData("infoNut"));
+
+    let newSquare: SquareType[] = [];
+    square.forEach((s) => {
+      if (s.position == position) {
+        s.name = infoDrop.name;
+        s.player = infoDrop.player;
+      }
+      newSquare.push(s);
+    });
+
+    setSquare(newSquare);
   };
 
   return (
     <span
+      onDragOver={(event) => dragOverHandler(event)}
+      onDrop={(event) => dropHandler(event, position)}
       onClick={clickHandlerSquare}
       className={`w-16 h-16 
       transition-all
@@ -189,7 +171,12 @@ export default function Square({
             }`}
           ></span>
         )}
-        {nut}
+        {name == "rook" && <FaChessRook />}
+        {name == "knight" && <FaChessKnight />}
+        {name == "bishop" && <FaChessBishop />}
+        {name == "queen" && <FaChessQueen />}
+        {name == "king" && <FaChessKing />}
+        {name == "pawn" && <FaChessPawn />}
       </span>
       <ModalPromotion
         isPownPromotion={infoPawnPromotion}

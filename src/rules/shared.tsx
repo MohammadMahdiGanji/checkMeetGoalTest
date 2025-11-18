@@ -3,11 +3,11 @@
 import { type SquareType } from "../type/type";
 
 // import rule
-import { findAvailableMovisPawn } from "./pawn";
-import { availiabelMovisKnight } from "./knight";
-import { availableMoveRook } from "./rook";
 import { avialiableBishopMove } from "./bishop";
+import { availiabelMovisKnight } from "./knight";
+import { findAvailableMovisPawn } from "./pawn";
 import { avialableMoveQueen } from "./queen";
+import { availableMoveRook } from "./rook";
 import { kingAvailable } from "./king";
 
 // types this file
@@ -24,7 +24,6 @@ interface SeTPpointer {
   square: SquareType[];
   setSquare: React.Dispatch<React.SetStateAction<SquareType[]>>;
   pointer: string[];
-  isTurn: boolean;
   player: "white" | "black" | "";
 }
 
@@ -62,7 +61,6 @@ interface MoveNutPropType {
   name: string;
   setAllCapture: React.Dispatch<React.SetStateAction<SquareType[]>>;
   player: string;
-  setIsTurn: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 // this function for is activate nut
@@ -89,37 +87,34 @@ export const setPpointer = ({
   square,
   setSquare,
   pointer,
-  isTurn,
   player,
 }: SeTPpointer): void => {
   resetPointer({ square, setSquare });
 
-  if (isTurn == true) {
-    if (player == "white") {
-      let newSquare: SquareType[] = [];
-      square.map((item) => {
-        pointer.map((i) => {
-          if (i === item.position) {
-            item.pointer = true;
-          }
-        });
-        newSquare.push(item);
+  if (player == "white") {
+    let newSquare: SquareType[] = [];
+    square.map((item) => {
+      pointer.map((i) => {
+        if (i === item.position) {
+          item.pointer = true;
+        }
       });
-      setSquare(newSquare);
-    }
-  } else {
-    if (player == "black") {
-      let newSquare: SquareType[] = [];
-      square.map((item) => {
-        pointer.map((i) => {
-          if (i === item.position) {
-            item.pointer = true;
-          }
-        });
-        newSquare.push(item);
+      newSquare.push(item);
+    });
+    setSquare(newSquare);
+  }
+
+  if (player == "black") {
+    let newSquare: SquareType[] = [];
+    square.map((item) => {
+      pointer.map((i) => {
+        if (i === item.position) {
+          item.pointer = true;
+        }
       });
-      setSquare(newSquare);
-    }
+      newSquare.push(item);
+    });
+    setSquare(newSquare);
   }
 };
 
@@ -185,8 +180,7 @@ export const avaliableMove = ({
       avaliableMove = avialableMoveQueen({ square, position });
       break;
     case "king":
-      avaliableMove = kingAvailable({ square });
-      break;
+      avaliableMove = kingAvailable({ square, position });
   }
   return avaliableMove;
 };
@@ -200,7 +194,6 @@ export const moveNut = ({
   player,
   name,
   setAllCapture,
-  setIsTurn,
 }: MoveNutPropType): void => {
   const active = square.find((item) => item.active === true);
 
@@ -240,7 +233,6 @@ export const moveNut = ({
             item.hasMoved = true;
             item.player = playerColor;
           }
-          setIsTurn((pre) => !pre);
         }
         item.active = false;
         newSquare.push(item);
@@ -259,3 +251,5 @@ export const moveNut = ({
     }
   }
 };
+
+export const devpriveMoveKing = () => {};

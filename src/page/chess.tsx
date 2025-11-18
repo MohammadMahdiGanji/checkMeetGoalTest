@@ -1,5 +1,5 @@
 // import dependency
-import { useContext, useEffect, useState, type JSX } from "react";
+import React, { useContext, useEffect, useState, type JSX } from "react";
 
 //import icons
 import { AiFillLike } from "react-icons/ai";
@@ -12,95 +12,53 @@ import Capture from "../component/capture/capture";
 import { ChessContext } from "../context/chess";
 
 // import rule
-import { checkking } from "../rules/check";
-import { checkMeetGoalTest } from "../checkMeetGoalTest/checkMeetGoalTest";
+import { depriveSquareForKing } from "../rules/check";
+import { checkKing } from "../rules/king";
 import { findNutMoveRoadsKingCheckAll } from "../rules/check";
+import { checkMeetGoalTest } from "../checkMeetGoalTest/checkMeetGoalTest";
+import Swal from "sweetalert2";
 
-import { kingAvailableCheck } from "../rules/king";
-
-import ModuleCheckMeet from "../component/moduleCheckMeet";
+// import data
+import { initailSquare } from "../data";
 
 export default function Chess(): JSX.Element {
   const { square, allCapture, setSquare } = useContext(ChessContext);
-  const [isTurn, setIsTurn] = useState<boolean>(false);
-  const [isCheckKing, setIsCheckKing] = useState<boolean>(false);
+  const [checkMeet, setCheckMeet] = useState<{
+    checkMeetWhite: boolean;
+    checkMeetBlack: boolean;
+  }>();
 
-  useEffect(() => {
-    checkking({ square, isTurn, setSquare });
-  }, [isTurn]);
+  const clickHandler = () => {
+    depriveSquareForKing({ setSquare, square });
 
-  useEffect(() => {
-    let isCheck: boolean = false;
-    const kingSquareWhite = square.find(
-      (s) => s.name === "king" && s.player == "white"
-    );
-    const kingSquareBlack = square.find(
-      (s) => s.name === "king" && s.player == "black"
-    );
+    let infoCheckMeet = checkMeetGoalTest({ square });
+    setCheckMeet(infoCheckMeet);
 
-    if (kingSquareWhite || kingSquareBlack) {
-      if (
-        kingSquareBlack?.isCHeckWhite == true ||
-        kingSquareWhite?.isCheckBlack == true
-      ) {
-        isCheck = true;
-        setIsCheckKing(true);
-      } else {
-        isCheck = false;
-        setIsCheckKing(false);
-      }
+    if (infoCheckMeet.checkMeetWhite) {
+      Swal.fire({
+        icon: "success",
+        title: "checkmeet player white",
+      });
     }
-    if (!isCheck) return;
-
-    let defientMoves: string[] = [];
-
-    square.forEach((s) => {
-      if (s.name == "pawn") {
-        defientMoves.push(
-          ...findNutMoveRoadsKingCheckAll({
-            square,
-            position: s.position,
-            name: s.name,
-            hasMoved: s.hasMoved,
-            player: s.player,
-            isTurn: isTurn,
-          })
-        );
-      } else {
-        defientMoves.push(
-          ...findNutMoveRoadsKingCheckAll({
-            square,
-            position: s.position,
-            name: s.name,
-            hasMoved: false,
-            player: s.player,
-            isTurn: isTurn,
-          })
-        );
-      }
-    });
-
-    const u = new Set(defientMoves);
-    defientMoves = [...u];
-
-    let moveKing: string[];
-    if (isTurn) {
-      moveKing = kingAvailableCheck({ square, player: "white" });
-    } else {
-      moveKing = kingAvailableCheck({ square, player: "black" });
+    if (infoCheckMeet.checkMeetBlack) {
+      Swal.fire({
+        icon: "success",
+        title: "checkmeet player black",
+      });
     }
+  };
 
-    if (isCheck && defientMoves.length == 0 && moveKing.length == 0) {
-      setTimeout(() => {
-        // alert("checkMeet");
-      }, 10);
+  const dragStartHandler = (
+    event: React.DragEvent<HTMLSpanElement>,
+    nut: {
+      position: string;
+      nut: React.ReactNode;
+      name: string;
+      player: "white" | "black" | "";
     }
-
-    console.log(
-      checkMeetGoalTest({ square, isTurn, isCheckKing: isCheck }),
-      "test goal"
-    );
-  }, [square, isCheckKing, isTurn]);
+  ) => {
+    event.dataTransfer.setData("infoNut", JSON.stringify(nut));
+  };
 
   return (
     <div
@@ -125,9 +83,6 @@ export default function Chess(): JSX.Element {
             <Square
               key={`${s.id}-${s.position}-${s.player}-${s.name}`}
               {...s}
-              isTurn={isTurn}
-              setIsTurn={setIsTurn}
-              isCheckKing={isCheckKing}
             />
           ))}
         </div>
@@ -147,14 +102,6 @@ export default function Chess(): JSX.Element {
           }
         })}
       </div>
-      <ModuleCheckMeet
-        isTurn={isTurn}
-        checkMeet={checkMeetGoalTest({
-          square,
-          isTurn,
-          isCheckKing: isCheckKing,
-        })}
-      />
 
       <div className="absolute top-5 w-[200px] h-[200px]  z-0 bg-[#8dd716] left-5 rounded-full"></div>
       <div
@@ -285,59 +232,97 @@ export default function Chess(): JSX.Element {
       <div className="w-[100px] absolute z-20 h-[150px] bg-[rgba(255,255,255,0.1)] backdrop-blur-sm right-[-70px] rounded-full"></div>
       <div className="w-[100px] absolute z-20 h-[150px] bg-[rgba(255,255,255,0.1)] backdrop-blur-sm left-[-70px] rounded-full"></div>
       <span
-        className={`fixed top-10 right-10 transition-all duration-300  z-100 ${
-          checkMeetGoalTest({
-            square,
-            isTurn,
-            isCheckKing,
-          })
-            ? "rotate-0"
-            : "rotate-180"
-        }`}
+        className={`fixed top-10 right-10 transition-all duration-300  z-100 `}
       >
-        <AiFillLike className="text-white text-8xl" />
+        <AiFillLike
+          className={`transition-all duration-300 text-white text-8xl ${
+            checkMeet?.checkMeetBlack || checkMeet?.checkMeetWhite
+              ? "rotate-0"
+              : "rotate-180"
+          }`}
+        />
       </span>
 
       <span
-        className={`fixed top-10 left-10 transition-all duration-300  z-100 ${
-          checkMeetGoalTest({
-            square,
-            isTurn,
-            isCheckKing,
-          })
-            ? "rotate-0"
-            : "rotate-180"
-        }`}
+        className={`fixed top-10 left-10 transition-all duration-300  z-100 
+         `}
       >
-        <AiFillLike className="text-white text-8xl" />
+        <AiFillLike
+          className={`transition-all duration-300 text-white text-8xl ${
+            checkMeet?.checkMeetBlack || checkMeet?.checkMeetWhite
+              ? "rotate-0"
+              : "rotate-180"
+          }`}
+        />
       </span>
       <span
-        className={`fixed bottom-10 left-10 transition-all duration-300  z-100 ${
-          checkMeetGoalTest({
-            square,
-            isTurn,
-            isCheckKing,
-          })
-            ? "rotate-0"
-            : "rotate-180"
-        }`}
+        className={`fixed bottom-10 left-10 transition-all duration-300  z-100 `}
       >
-        <AiFillLike className="text-white text-8xl" />
+        <AiFillLike
+          className={`transition-all duration-300 text-white text-8xl ${
+            checkMeet?.checkMeetBlack || checkMeet?.checkMeetWhite
+              ? "rotate-0"
+              : "rotate-180"
+          }`}
+        />
       </span>
 
       <span
-        className={`fixed bottom-10 right-10 transition-all duration-300  z-100 ${
-          checkMeetGoalTest({
-            square,
-            isTurn,
-            isCheckKing,
-          })
-            ? "rotate-0"
-            : "rotate-180"
-        }`}
+        className={`fixed bottom-10 right-10 transition-all duration-300  z-100 `}
       >
-        <AiFillLike className="text-white text-8xl" />
+        <AiFillLike
+          className={`transition-all duration-300 text-white text-8xl ${
+            checkMeet?.checkMeetBlack || checkMeet?.checkMeetWhite
+              ? "rotate-0"
+              : "rotate-180"
+          }`}
+        />
       </span>
+      <div
+        className="fixed top-0 bottom-0 left-0 w-[100px] z-90
+       bg-[rgba(255,255,255,0.23)] backdrop-blur-xl border-r-[1px] border-white
+       flex flex-col items-center justify-center gap-5"
+      >
+        {initailSquare.map(
+          (nut) =>
+            nut.player == "white" && (
+              <span
+                draggable={true}
+                onDragStart={(event) => dragStartHandler(event, nut)}
+                className="text-white text-5xl cursor-pointer"
+              >
+                {nut.nut}
+              </span>
+            )
+        )}
+      </div>
+      <div
+        className="fixed top-0 bottom-0 right-0 w-[100px] z-90
+       bg-[rgba(255,255,255,0.23)] backdrop-blur-xl border-l-[1px] border-white
+       flex flex-col items-center justify-center gap-5"
+      >
+        {initailSquare.map(
+          (nut) =>
+            nut.player == "black" && (
+              <span
+                className="text-black text-5xl cursor-pointer"
+                draggable={true}
+                onDragStart={(event) => dragStartHandler(event, nut)}
+              >
+                {nut.nut}
+              </span>
+            )
+        )}
+      </div>
+      <button
+        onClick={clickHandler}
+        className="fixed top-84  left-60 text-white bg-[rgba(255,255,255,0.1)]
+         backdrop-blur-md px-5 py-4 z-100 border-[rgba(255,255,255,0.5)]
+         border-[1px] rounded-xl hover:scale-110 transition-all duration-300
+         cursor-pointer"
+      >
+        result goal test function
+      </button>
     </div>
   );
 }
